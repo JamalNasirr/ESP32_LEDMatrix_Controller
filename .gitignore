@@ -1,0 +1,16 @@
+# PlatformIO build files
+.pio/
+
+# VS Code environment configurations
+.vscode/
+.pioenvs/
+.piolibdeps/
+
+# Local build artifacts
+*.elf
+*.bin
+*.hex
+
+# OS files
+.DS_Store
+Thumbs.db
