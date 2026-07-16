@@ -194,6 +194,30 @@ const char index_html[] PROGMEM = R"rawhtml(
             padding: 2px 8px;
             border-radius: 4px;
         }
+        .num-input {
+            width: 70px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(127, 90, 240, 0.4);
+            border-radius: 6px;
+            color: var(--accent-hover);
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 4px 8px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -moz-appearance: textfield;
+        }
+        .num-input::-webkit-outer-spin-button,
+        .num-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .num-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(127, 90, 240, 0.3);
+        }
         .slider-input {
             width: 100%;
             -webkit-appearance: none;
@@ -294,7 +318,7 @@ const char index_html[] PROGMEM = R"rawhtml(
             <div class="slider-group">
                 <div class="slider-header">
                     <span>Number of LED Strips:</span>
-                    <span class="slider-val" id="strips-val">20</span>
+                    <input type="number" id="num-strips" class="num-input" min="1" max="200" value="20">
                 </div>
                 <input type="range" id="input-strips" class="slider-input" min="1" max="200" value="20">
             </div>
@@ -302,7 +326,7 @@ const char index_html[] PROGMEM = R"rawhtml(
             <div class="slider-group">
                 <div class="slider-header">
                     <span>LEDs per Strip:</span>
-                    <span class="slider-val" id="leds-val">25</span>
+                    <input type="number" id="num-leds" class="num-input" min="1" max="500" value="25">
                 </div>
                 <input type="range" id="input-leds" class="slider-input" min="1" max="500" value="25">
             </div>
@@ -491,8 +515,8 @@ const char index_html[] PROGMEM = R"rawhtml(
 
         const inputStrips = document.getElementById('input-strips');
         const inputLeds = document.getElementById('input-leds');
-        const stripsVal = document.getElementById('strips-val');
-        const ledsVal = document.getElementById('leds-val');
+        const numStrips = document.getElementById('num-strips');
+        const numLeds = document.getElementById('num-leds');
         
         const valTotalLeds = document.getElementById('val-total-leds');
         const valFps = document.getElementById('val-fps');
@@ -509,8 +533,8 @@ const char index_html[] PROGMEM = R"rawhtml(
             const strips = parseInt(inputStrips.value);
             const leds = parseInt(inputLeds.value);
             
-            stripsVal.textContent = strips;
-            ledsVal.textContent = leds;
+            numStrips.value = strips;
+            numLeds.value = leds;
             
             const totalLeds = strips * leds;
             valTotalLeds.textContent = totalLeds.toLocaleString();
@@ -609,6 +633,37 @@ const char index_html[] PROGMEM = R"rawhtml(
         inputLeds.addEventListener('input', updateLayout);
         inputStrips.addEventListener('change', saveLayout);
         inputLeds.addEventListener('change', saveLayout);
+
+        // Sync number input -> slider
+        numStrips.addEventListener('input', function() {
+            let v = parseInt(this.value) || 1;
+            v = Math.max(1, Math.min(200, v));
+            inputStrips.value = v;
+            updateLayout();
+        });
+        numStrips.addEventListener('change', function() {
+            let v = parseInt(this.value) || 1;
+            v = Math.max(1, Math.min(200, v));
+            this.value = v;
+            inputStrips.value = v;
+            updateLayout();
+            saveLayout();
+        });
+        numLeds.addEventListener('input', function() {
+            let v = parseInt(this.value) || 1;
+            v = Math.max(1, Math.min(500, v));
+            inputLeds.value = v;
+            updateLayout();
+        });
+        numLeds.addEventListener('change', function() {
+            let v = parseInt(this.value) || 1;
+            v = Math.max(1, Math.min(500, v));
+            this.value = v;
+            inputLeds.value = v;
+            updateLayout();
+            saveLayout();
+        });
+
         updateLayout();
 
         function showStatus(text, className) {
