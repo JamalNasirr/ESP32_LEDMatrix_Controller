@@ -700,9 +700,6 @@ void handleFileUpload() {
       Serial.println("\n>>> Starting new file upload...");
     }
     
-    // Give background task on Core 0 time to close file handle
-    delay(50);
-    
     // Close animation file before writing/appending
     if (animationFile) {
       animationFile.close();
@@ -732,67 +729,16 @@ void handleFileUpload() {
     if (isLast) {
       Serial.println(">>> File upload completed successfully!");
       isUploading = false;
-    }
-  }
-}
-
-// Dedicated LED Task running on Core 0
-void ledTask(void *pvParameters) {
-  Serial.println("Background LED Task started on Core 0.");
-  
-  while (true) {
-    if (isUploading) {
-      if (animationFile) {
-        animationFile.close();
-      }
-      fill_solid(leds, MAX_LEDS, CRGB::Black);
-      FastLED.show();
-      vTaskDelay(pdMS_TO_TICKS(100));
-      continue;
-    }
-
-    if (!animationFile) {
-      if (LittleFS.exists("/animation.bin")) {
-        animationFile = LittleFS.open("/animation.bin", "r");
-        if (animationFile) {
-          animationFile.seek(512); // Skip the 512-byte header
-          Serial.println(">>> Background LED Task: Loaded animation.bin from flash.");
-        }
-      }
       
+      // Open newly uploaded file for animation playback and skip 512-byte header
+      animationFile = LittleFS.open("/animation.bin", "r");
       if (!animationFile) {
-        // Idle animation: flash green led 0
-        fill_solid(leds, MAX_LEDS, CRGB::Black);
-        leds[0] = CRGB::Green;
-        FastLED.show();
-        vTaskDelay(pdMS_TO_TICKS(500));
-        continue;
+        Serial.println("ERROR: Could not open /animation.bin for reading!");
+      } else {
+        animationFile.seek(512);
+        Serial.println(">>> Animation file loaded and seeked to byte 512.");
       }
     }
-
-    // Read frame data directly into FastLED memory array in one single block read
-    if (animationFile.available() < active_leds * 3) {
-      animationFile.seek(512); // Loop back to frame 1
-    }
-
-    int bytesRead = animationFile.read((uint8_t*)leds, active_leds * 3);
-    
-    if (bytesRead != active_leds * 3) {
-      // File read error, reset seek and try next iteration
-      animationFile.seek(512);
-      vTaskDelay(pdMS_TO_TICKS(10));
-      continue;
-    }
-
-    // Clear unused LEDs to black
-    for (int i = active_leds; i < MAX_LEDS; i++) {
-      leds[i] = CRGB::Black;
-    }
-
-    FastLED.show();
-    
-    // Play at ~30 FPS
-    vTaskDelay(pdMS_TO_TICKS(33));
   }
 }
 
@@ -815,6 +761,15 @@ void setup() {
   FastLED.setBrightness(255);
   fill_solid(leds, MAX_LEDS, CRGB::Black);
   FastLED.show();
+
+  // Load existing animation if it exists
+  animationFile = LittleFS.open("/animation.bin", "r");
+  if (animationFile) {
+    animationFile.seek(512);
+    Serial.println(">>> Found existing animation.bin, playing from byte 512...");
+  } else {
+    Serial.println(">>> No animation.bin found. Waiting for upload.");
+  }
 
   // Setup Wi-Fi Connection
   Serial.print("Connecting to Wi-Fi: ");
@@ -839,20 +794,44 @@ void setup() {
 
   server.begin();
   Serial.println("Web Server started!");
-
-  // Spawn LED task on Core 0 (isolated from Wi-Fi operations)
-  xTaskCreatePinnedToCore(
-    ledTask,            /* Task function */
-    "LEDTask",          /* Name of task */
-    4096,               /* Stack size in words */
-    NULL,               /* Task input parameter */
-    1,                  /* Priority of the task */
-    NULL,               /* Task handle */
-    0                   /* Pinned to Core 0 */
-  );
 }
 
 void loop() {
   server.handleClient();
-  vTaskDelay(pdMS_TO_TICKS(2));
+
+  if (isUploading) {
+    vTaskDelay(pdMS_TO_TICKS(5));
+    return;
+  }
+
+  if (!animationFile) {
+    // If no file loaded, display an idle green indicator at pixel 0
+    fill_solid(leds, MAX_LEDS, CRGB::Black);
+    leds[0] = CRGB::Green;
+    FastLED.show();
+    delay(500);
+    return;
+  }
+
+  // Read frame data directly into FastLED memory array in one single block read
+  if (animationFile.available() < active_leds * 3) {
+    animationFile.seek(512); // Loop back to frame 1
+  }
+
+  int bytesRead = animationFile.read((uint8_t*)leds, active_leds * 3);
+  
+  if (bytesRead != active_leds * 3) {
+    // File read error, reset seek and try next iteration
+    animationFile.seek(512);
+    delay(10);
+    return;
+  }
+
+  // Clear unused LEDs to black
+  for (int i = active_leds; i < MAX_LEDS; i++) {
+    leds[i] = CRGB::Black;
+  }
+
+  FastLED.show();
+  delay(33); // 30 FPS
 }
