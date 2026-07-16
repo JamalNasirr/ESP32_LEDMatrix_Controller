@@ -9,6 +9,7 @@
 
 CRGB leds[MAX_LEDS];
 int active_leds = 500;
+CLEDController *ledController = NULL;
 File animationFile;
 bool isUploading = false;
 
@@ -668,6 +669,9 @@ void handleSetLayout() {
       active_leds = strips * leds_per_strip;
       if (active_leds > MAX_LEDS) active_leds = MAX_LEDS;
       
+      // Update FastLED to only push active_leds (huge performance gain)
+      if (ledController) ledController->setLeds(leds, active_leds);
+      
       saveLayoutConfig(strips, leds_per_strip);
       server.send(200, "text/plain", "Layout updated");
       return;
@@ -756,10 +760,10 @@ void setup() {
   // Load active layout settings
   loadLayoutConfig();
 
-  // Setup FastLED with MAX_LEDS capacity
-  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, MAX_LEDS);
+  // Setup FastLED with only active_leds (avoids pushing 6000 LEDs per frame)
+  ledController = &FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, active_leds);
   FastLED.setBrightness(255);
-  fill_solid(leds, MAX_LEDS, CRGB::Black);
+  fill_solid(leds, active_leds, CRGB::Black);
   FastLED.show();
 
   // Load existing animation if it exists
@@ -825,11 +829,6 @@ void loop() {
     animationFile.seek(512);
     delay(10);
     return;
-  }
-
-  // Clear unused LEDs to black
-  for (int i = active_leds; i < MAX_LEDS; i++) {
-    leds[i] = CRGB::Black;
   }
 
   FastLED.show();

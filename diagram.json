@@ -9,7 +9,7 @@
       "id": "matrix1",
       "top": -80,
       "left": 150,
-      "attrs": { "rows": "20", "cols": "25", "layout": "progressive" }
+      "attrs": { "rows": "45", "cols": "45", "layout": "progressive" }
     }
   ],
   "connections": [
