@@ -13,6 +13,10 @@ CLEDController *ledController = NULL;
 File animationFile;
 bool isUploading = false;
 
+// Frame timing — target 30 FPS
+const unsigned long FRAME_INTERVAL_MS = 33;
+unsigned long lastFrameTime = 0;
+
 WebServer server(80);
 
 const char* ssid = "Wokwi-GUEST";
@@ -540,12 +544,15 @@ const char index_html[] PROGMEM = R"rawhtml(
             valTotalLeds.textContent = totalLeds.toLocaleString();
             
             const frameTimeMs = (totalLeds * 0.03) + 0.3;
-            const maxFps = Math.min(100, Math.round(1000 / frameTimeMs));
+            const hwFps = Math.round(1000 / frameTimeMs);
+            const actualFps = Math.min(30, hwFps); // Firmware caps at 30 FPS
             
-            if (maxFps < 1) {
+            if (actualFps < 1) {
                 valFps.textContent = "<1 FPS";
+            } else if (hwFps >= 30) {
+                valFps.textContent = "30 FPS";
             } else {
-                valFps.textContent = maxFps + " FPS";
+                valFps.textContent = actualFps + " FPS (HW limited)";
             }
             
             const maxAmps = (totalLeds * 0.06).toFixed(1);
@@ -865,12 +872,19 @@ void loop() {
 
   if (!animationFile) {
     // If no file loaded, display an idle green indicator at pixel 0
-    fill_solid(leds, MAX_LEDS, CRGB::Black);
+    fill_solid(leds, active_leds, CRGB::Black);
     leds[0] = CRGB::Green;
     FastLED.show();
     delay(500);
     return;
   }
+
+  // Frame pacing — only advance to next frame every FRAME_INTERVAL_MS
+  unsigned long now = millis();
+  if (now - lastFrameTime < FRAME_INTERVAL_MS) {
+    return; // Not time for next frame yet, let server.handleClient() run again
+  }
+  lastFrameTime = now;
 
   // Read frame data directly into FastLED memory array in one single block read
   if (animationFile.available() < active_leds * 3) {
@@ -887,5 +901,4 @@ void loop() {
   }
 
   FastLED.show();
-  delay(33); // 30 FPS
 }
