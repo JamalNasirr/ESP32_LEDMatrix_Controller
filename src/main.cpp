@@ -663,7 +663,7 @@ const char index_html[] PROGMEM = R"rawhtml(
             let alertsHTML = '';
             let activePins = [];
             
-            if (totalLeds <= 600) {
+            if (strips <= 1) {
                 // Serial mode — single data pin
                 activePins = [2];
             } else if (strips <= 16) {
