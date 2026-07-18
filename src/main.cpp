@@ -13,9 +13,8 @@ CLEDController *ledController = NULL;
 File animationFile;
 bool isUploading = false;
 
-// Frame timing — target 30 FPS
+// Frame timing — target ~30 FPS
 const unsigned long FRAME_INTERVAL_MS = 33;
-unsigned long lastFrameTime = 0;
 
 WebServer server(80);
 
@@ -796,13 +795,13 @@ void handleFileUpload() {
       Serial.println(">>> File upload completed successfully!");
       isUploading = false;
       
-      // Open newly uploaded file for animation playback and skip 512-byte header
+      // Open newly uploaded file for animation playback
       animationFile = LittleFS.open("/animation.bin", "r");
       if (!animationFile) {
         Serial.println("ERROR: Could not open /animation.bin for reading!");
       } else {
-        animationFile.seek(512);
-        Serial.println(">>> Animation file loaded and seeked to byte 512.");
+        animationFile.seek(0);
+        Serial.println(">>> Animation file loaded, ready to play.");
       }
     }
   }
@@ -831,8 +830,8 @@ void setup() {
   // Load existing animation if it exists
   animationFile = LittleFS.open("/animation.bin", "r");
   if (animationFile) {
-    animationFile.seek(512);
-    Serial.println(">>> Found existing animation.bin, playing from byte 512...");
+    animationFile.seek(0);
+    Serial.println(">>> Found existing animation.bin, ready to play.");
   } else {
     Serial.println(">>> No animation.bin found. Waiting for upload.");
   }
@@ -866,7 +865,7 @@ void loop() {
   server.handleClient();
 
   if (isUploading) {
-    vTaskDelay(pdMS_TO_TICKS(5));
+    delay(10);
     return;
   }
 
@@ -879,26 +878,21 @@ void loop() {
     return;
   }
 
-  // Frame pacing — only advance to next frame every FRAME_INTERVAL_MS
-  unsigned long now = millis();
-  if (now - lastFrameTime < FRAME_INTERVAL_MS) {
-    return; // Not time for next frame yet, let server.handleClient() run again
-  }
-  lastFrameTime = now;
-
   // Read frame data directly into FastLED memory array in one single block read
-  if (animationFile.available() < active_leds * 3) {
-    animationFile.seek(512); // Loop back to frame 1
+  int frameSize = active_leds * 3;
+  if (animationFile.available() < frameSize) {
+    animationFile.seek(0); // Loop back to first frame
   }
 
-  int bytesRead = animationFile.read((uint8_t*)leds, active_leds * 3);
+  int bytesRead = animationFile.read((uint8_t*)leds, frameSize);
   
-  if (bytesRead != active_leds * 3) {
+  if (bytesRead != frameSize) {
     // File read error, reset seek and try next iteration
-    animationFile.seek(512);
+    animationFile.seek(0);
     delay(10);
     return;
   }
 
   FastLED.show();
+  delay(FRAME_INTERVAL_MS); // ~30 FPS — delay yields CPU properly
 }
