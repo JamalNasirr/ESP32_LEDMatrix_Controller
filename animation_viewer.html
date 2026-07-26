@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LED Matrix Animation Player & Converter</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0c10;
+            --bg-secondary: #12161f;
+            --bg-card: rgba(22, 28, 40, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(0, 240, 255, 0.3);
+            --accent-cyan: #00f0ff;
+            --accent-green: #00ff88;
+            --accent-purple: #7000ff;
+            --accent-orange: #ff9900;
+            --text-main: #f0f4f8;
+            --text-muted: #8a99ad;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+            --shadow-glow: 0 0 25px rgba(0, 240, 255, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(112, 0, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(0, 240, 255, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+        }
+
+        .brand-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+        }
+
+        .brand-title h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, var(--text-muted));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-title p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        @media (max-width: 992px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.3s ease;
+        }
+
+        .panel:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.01);
+            position: relative;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 240, 255, 0.04);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .dropzone input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .dropzone-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-cyan);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .dropzone-text {
+            font-size: 0.88rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .dropzone-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .file-info {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            display: none;
+            word-break: break-all;
+            border-left: 3px solid var(--accent-green);
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-label span.value {
+            color: var(--accent-cyan);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 8px 12px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        select option {
+            background: var(--bg-secondary);
+            color: var(--text-main);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        /* Display Viewport */
+        .viewport-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 480px;
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-width: 100%;
+            max-height: 540px;
+            overflow: auto;
+            padding: 24px;
+            border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+        }
+
+        canvas {
+            display: block;
+            border-radius: 6px;
+            image-rendering: pixelated;
+        }
+
+        .canvas-glow {
+            filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.35));
+        }
+
+        /* Playback Controls */
+        .player-bar {
+            margin-top: 20px;
+            width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .scrubber-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border: none;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green), #00b359);
+            border: none;
+            color: #000;
+            font-weight: 600;
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            margin-top: 2px;
+        }
+
+        .placeholder-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .placeholder-state svg {
+            width: 48px;
+            height: 48px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 1.5;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .alert-box {
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 153, 0, 0.1);
+            border: 1px solid rgba(ff, 153, 0, 0.3);
+            color: var(--accent-orange);
+            font-size: 0.78rem;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+            </div>
+            <div class="brand-title">
+                <h1>LED Matrix Animation Player</h1>
+                <p>Advanced Binary Decoder & Header Auto-Alignment Tool</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+
+            <!-- File Upload Panel -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    Animation File
+                </div>
+                <div class="dropzone" id="dropzone">
+                    <input type="file" id="fileInput" accept=".bin">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    </div>
+                    <div class="dropzone-text">Choose .bin animation file</div>
+                    <div class="dropzone-hint">or drag and drop binary file here</div>
+                </div>
+                <div class="file-info" id="fileInfo">No file loaded</div>
+                <div class="alert-box" id="alertBox"></div>
+            </div>
+
+            <!-- Decoding & Alignment Settings -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    Binary Decoding & Alignment
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Header Offset</div>
+                    <select id="headerOffset">
+                        <option value="0" selected>0 Bytes (Headerless / Direct Raw)</option>
+                        <option value="512">512 Bytes (Original Export Files)</option>
+                        <option value="auto">Auto-Detect Header Offset</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Color Channel Order</div>
+                    <select id="colorOrder">
+                        <option value="RGB" selected>RGB (Red, Green, Blue)</option>
+                        <option value="GRB">GRB (WS2812B Native)</option>
+                        <option value="BGR">BGR (Reverse RGB)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Matrix Wiring Layout</div>
+                    <select id="matrixLayout">
+                        <option value="progressive" selected>Progressive (Row by Row)</option>
+                        <option value="serpentine">Serpentine / Zigzag</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Start Corner</div>
+                    <select id="startCorner">
+                        <option value="top-left" selected>Top-Left (Default)</option>
+                        <option value="bottom-left">Bottom-Left</option>
+                        <option value="top-right">Top-Right</option>
+                        <option value="bottom-right">Bottom-Right</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Matrix Rotation <span class="value" id="rotationVal">0°</span></div>
+                    <select id="matrixRotation">
+                        <option value="0" selected>0° (Normal)</option>
+                        <option value="90">90° Clockwise</option>
+                        <option value="180">180° Inverted</option>
+                        <option value="270">270° Counter-Clockwise</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Smart Auto-Detect Panel -->
+            <div class="panel" style="background: rgba(0, 240, 255, 0.04); border-color: rgba(0, 240, 255, 0.2);">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    Auto-Detect Dimensions
+                </div>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Automatically inspect file header, filename patterns, and frame factor ratios.
+                </p>
+                <button class="btn btn-primary" id="autoDetectBtn" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+                    ⚡ Run Auto-Detect
+                </button>
+                <div id="autoDetectResults" style="display: none; padding: 10px; background: rgba(0, 0, 0, 0.4); border-radius: var(--radius-sm); font-size: 0.8rem; border-left: 3px solid var(--accent-cyan);">
+                    <div style="font-weight: 600; color: var(--accent-cyan);" id="detectedDimText">Detected: 25 x 20</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;" id="detectedReason">Matched from filename & header</div>
+                    <button class="btn btn-success" id="applyDetectedBtn" style="width: 100%; justify-content: center; margin-top: 8px; font-size: 0.78rem; padding: 6px 10px;">
+                        ✓ Apply Detected Dimensions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Matrix Dimensions Panel -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Matrix Dimensions (Manual Input)
+                </div>
+
+                <div class="form-group">
+                    <div class="form-label">Presets</div>
+                    <select id="presetSelect">
+                        <option value="custom">Custom Configuration</option>
+                        <option value="25x20" selected>25 x 20 (500 LEDs)</option>
+                        <option value="20x25">20 x 25 (500 LEDs)</option>
+                        <option value="32x32">32 x 32 (1024 LEDs)</option>
+                        <option value="64x64">64 x 64 (4096 LEDs)</option>
+                        <option value="72x72">72 x 72 (5184 LEDs)</option>
+                        <option value="120x150">120 x 150 (18,000 LEDs)</option>
+                    </select>
+                </div>
+
+                <div class="form-row form-group">
+                    <div>
+                        <div class="form-label">Width (Cols)</div>
+                        <input type="number" id="matrixWidth" value="25" min="1" max="500">
+                    </div>
+                    <div>
+                        <div class="form-label">Height (Rows)</div>
+                        <input type="number" id="matrixHeight" value="20" min="1" max="500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Settings -->
+            <div class="panel">
+                <div class="panel-title">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Display Settings
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Pixel Size <span class="value" id="pixelSizeVal">16px</span></div>
+                    <input type="range" id="pixelSize" min="2" max="40" value="16">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Playback Speed <span class="value" id="fpsVal">30 FPS</span></div>
+                    <input type="range" id="fpsSlider" min="1" max="60" value="30">
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Glow Effect</div>
+                    <select id="glowToggle">
+                        <option value="enabled" selected>Enabled (NeoPixel Glow)</option>
+                        <option value="disabled">Disabled (Crisp Grid)</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Viewport & Player Controls -->
+        <div style="display: flex; flex-direction: column;">
+            <div class="panel viewport-panel">
+                <div class="canvas-container">
+                    <canvas id="matrixCanvas" class="canvas-glow"></canvas>
+                    <div class="placeholder-state" id="placeholder">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                        <h3>No Animation File Loaded</h3>
+                        <p>Upload <code>25X20-ISLAMI_0_orig.bin</code> or any <code>.bin</code> file to play</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="player-bar">
+                <div class="scrubber-container">
+                    <button class="btn" id="playBtn">
+                        <svg id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    </button>
+                    <input type="range" id="timelineScrubber" min="0" max="0" value="0" step="1" style="flex: 1;">
+                    <div class="time-display" id="timeDisplay">0 / 0</div>
+                </div>
+
+                <div class="controls-row">
+                    <div class="btn-group">
+                        <button class="btn" id="prevFrameBtn">Step -1</button>
+                        <button class="btn" id="nextFrameBtn">Step +1</button>
+                        <button class="btn" id="resetBtn">Reset</button>
+                        <button class="btn" id="rotateBtn">↻ Rotate 90°</button>
+                    </div>
+
+                    <!-- Speed Controls -->
+                    <div class="btn-group" style="align-items: center; gap: 8px;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">Speed:</span>
+                        <select id="speedMultiplier" style="width: auto; padding: 5px 10px; font-size: 0.8rem;">
+                            <option value="0.25">0.25x (Slow Motion)</option>
+                            <option value="0.5">0.5x (Half Speed)</option>
+                            <option value="1" selected>1.0x (Normal)</option>
+                            <option value="1.5">1.5x (Fast)</option>
+                            <option value="2">2.0x (Double Speed)</option>
+                            <option value="4">4.0x (Ultra Fast)</option>
+                        </select>
+                        <span style="font-size: 0.8rem; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-weight: 600;" id="quickFpsDisplay">30 FPS</span>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn" id="demoBtn">Load Demo Pattern</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total LEDs</div>
+                    <div class="stat-value" id="statTotalLeds">500</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Frames</div>
+                    <div class="stat-value" id="statTotalFrames">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Duration</div>
+                    <div class="stat-value" id="statDuration">0.0s</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">File Size</div>
+                    <div class="stat-value" id="statFileSize">0 KB</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const alertBox = document.getElementById('alertBox');
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        const placeholder = document.getElementById('placeholder');
+
+        const matrixWidthInput = document.getElementById('matrixWidth');
+        const matrixHeightInput = document.getElementById('matrixHeight');
+        const presetSelect = document.getElementById('presetSelect');
+        const matrixLayoutSelect = document.getElementById('matrixLayout');
+        const startCornerSelect = document.getElementById('startCorner');
+        const headerOffsetSelect = document.getElementById('headerOffset');
+        const colorOrderSelect = document.getElementById('colorOrder');
+
+        const pixelSizeInput = document.getElementById('pixelSize');
+        const pixelSizeVal = document.getElementById('pixelSizeVal');
+        const fpsSlider = document.getElementById('fpsSlider');
+        const fpsVal = document.getElementById('fpsVal');
+        const glowToggle = document.getElementById('glowToggle');
+
+        const playBtn = document.getElementById('playBtn');
+        const playIcon = document.getElementById('playIcon');
+        const timelineScrubber = document.getElementById('timelineScrubber');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const prevFrameBtn = document.getElementById('prevFrameBtn');
+        const nextFrameBtn = document.getElementById('nextFrameBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const demoBtn = document.getElementById('demoBtn');
+
+        const statTotalLeds = document.getElementById('statTotalLeds');
+        const statTotalFrames = document.getElementById('statTotalFrames');
+        const statDuration = document.getElementById('statDuration');
+        const statFileSize = document.getElementById('statFileSize');
+
+        // State Variables
+        let rawBuffer = null;
+        let activeOffset = 0;
+        let totalFrames = 0;
+        let currentFrame = 0;
+        let isPlaying = false;
+        let animationTimer = null;
+        let targetFPS = 30;
+
+        // Preset Selector
+        presetSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'custom') return;
+            const [w, h] = e.target.value.split('x').map(Number);
+            matrixWidthInput.value = w;
+            matrixHeightInput.value = h;
+            updateMatrixConfig();
+        });
+
+        matrixWidthInput.addEventListener('change', () => { presetSelect.value = 'custom'; updateMatrixConfig(); });
+        matrixHeightInput.addEventListener('change', () => { presetSelect.value = 'custom'; updateMatrixConfig(); });
+        matrixLayoutSelect.addEventListener('change', () => renderCurrentFrame());
+        startCornerSelect.addEventListener('change', () => renderCurrentFrame());
+        colorOrderSelect.addEventListener('change', () => renderCurrentFrame());
+
+        headerOffsetSelect.addEventListener('change', () => {
+            updateMatrixConfig();
+        });
+
+        pixelSizeInput.addEventListener('input', (e) => {
+            pixelSizeVal.textContent = `${e.target.value}px`;
+            updateCanvasDimensions();
+            renderCurrentFrame();
+        });
+
+        glowToggle.addEventListener('change', (e) => {
+            if (e.target.value === 'enabled') {
+                canvas.classList.add('canvas-glow');
+            } else {
+                canvas.classList.remove('canvas-glow');
+            }
+        });
+
+        const speedMultiplierSelect = document.getElementById('speedMultiplier');
+        const quickFpsDisplay = document.getElementById('quickFpsDisplay');
+        let baseFPS = 30;
+
+        function updateEffectiveFPS() {
+            const mult = parseFloat(speedMultiplierSelect.value) || 1.0;
+            targetFPS = Math.max(1, Math.round(baseFPS * mult));
+            fpsVal.textContent = `${targetFPS} FPS (${mult}x)`;
+            quickFpsDisplay.textContent = `${targetFPS} FPS`;
+
+            if (isPlaying) {
+                stopPlayback();
+                startPlayback();
+            }
+            updateStats();
+        }
+
+        speedMultiplierSelect.addEventListener('change', updateEffectiveFPS);
+
+        fpsSlider.addEventListener('input', (e) => {
+            baseFPS = parseInt(e.target.value);
+            updateEffectiveFPS();
+        });
+
+        // File Drag & Drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Auto-Detect Elements
+        const autoDetectBtn = document.getElementById('autoDetectBtn');
+        const autoDetectResults = document.getElementById('autoDetectResults');
+        const detectedDimText = document.getElementById('detectedDimText');
+        const detectedReason = document.getElementById('detectedReason');
+        const applyDetectedBtn = document.getElementById('applyDetectedBtn');
+        let pendingDetectedDim = null;
+
+        function runAutoDetect(filename = '') {
+            let detectedW = null;
+            let detectedH = null;
+            let reason = '';
+
+            // Strategy 1: Check Filename Patterns (e.g. 25X20, 20x25, 32x32)
+            if (filename) {
+                const fnMatch = filename.match(/(\d+)[xX_](\d+)/);
+                if (fnMatch) {
+                    detectedW = parseInt(fnMatch[1]);
+                    detectedH = parseInt(fnMatch[2]);
+                    reason = `Extracted ${detectedW}x${detectedH} from filename "${filename}"`;
+                }
+            }
+
+            // Strategy 2: Check Binary Header Metadata if buffer exists
+            if ((!detectedW || !detectedH) && rawBuffer && rawBuffer.length >= 32) {
+                // Read uint16 pairs from header
+                const view = new DataView(rawBuffer.buffer);
+                for (let offset = 0; offset <= 32; offset += 2) {
+                    const val1 = view.getUint16(offset, true);  // LE
+                    const val2 = view.getUint16(offset + 2, true);
+                    if (val1 >= 4 && val1 <= 500 && val2 >= 4 && val2 <= 500 && (val1 * val2 <= 50000)) {
+                        // Check if file payload fits frame size
+                        const frameSizeBytes = val1 * val2 * 3;
+                        if ((rawBuffer.length - 512) % frameSizeBytes === 0 || rawBuffer.length % frameSizeBytes === 0) {
+                            detectedW = val1;
+                            detectedH = val2;
+                            reason = `Parsed ${val1}x${val2} from binary header metadata`;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Strategy 3: Check standard factor pairs for total LEDs if filename contains a number (e.g., animation_500)
+            if ((!detectedW || !detectedH) && filename) {
+                const numMatch = filename.match(/(\d+)/);
+                if (numMatch) {
+                    const totalLeds = parseInt(numMatch[1]);
+                    if (totalLeds === 500) {
+                        detectedW = 25; detectedH = 20;
+                        reason = `Matched 500 LEDs -> default 25x20 grid`;
+                    } else if (totalLeds === 1024) {
+                        detectedW = 32; detectedH = 32;
+                        reason = `Matched 1024 LEDs -> 32x32 grid`;
+                    }
+                }
+            }
+
+            // Fallback default
+            if (!detectedW || !detectedH) {
+                detectedW = 25;
+                detectedH = 20;
+                reason = `Default standard LED matrix ratio (25x20)`;
+            }
+
+            pendingDetectedDim = { width: detectedW, height: detectedH };
+            detectedDimText.textContent = `Detected: ${detectedW} x ${detectedH} (${detectedW * detectedH} LEDs)`;
+            detectedReason.textContent = reason;
+            autoDetectResults.style.display = 'block';
+        }
+
+        autoDetectBtn.addEventListener('click', () => {
+            const currentFileName = fileInfo.textContent.split(' ')[0] || '';
+            runAutoDetect(currentFileName);
+        });
+
+        applyDetectedBtn.addEventListener('click', () => {
+            if (pendingDetectedDim) {
+                matrixWidthInput.value = pendingDetectedDim.width;
+                matrixHeightInput.value = pendingDetectedDim.height;
+                presetSelect.value = 'custom';
+                updateMatrixConfig();
+            }
+        });
+
+        function handleFile(file) {
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                rawBuffer = new Uint8Array(evt.target.result);
+
+                // Auto-detect header offset if selected
+                if (headerOffsetSelect.value === 'auto') {
+                    if (rawBuffer.length > 512 && (rawBuffer[0] === 0 || rawBuffer[0] === 0x14 || rawBuffer[1] === 0x14)) {
+                        headerOffsetSelect.value = "512";
+                        alertBox.style.display = "block";
+                        alertBox.textContent = "Auto-detected 512-byte header in binary file!";
+                    } else {
+                        headerOffsetSelect.value = "0";
+                        alertBox.style.display = "block";
+                        alertBox.textContent = "Auto-detected 0-byte headerless file!";
+                    }
+                } else {
+                    alertBox.style.display = "none";
+                }
+
+                // Automatically run dimension auto-detect when a file is loaded
+                runAutoDetect(file.name);
+
+                updateMatrixConfig();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Matrix Config Update
+        function updateMatrixConfig() {
+            const width = parseInt(matrixWidthInput.value) || 25;
+            const height = parseInt(matrixHeightInput.value) || 20;
+            const ledsPerFrame = width * height;
+            const frameSizeBytes = ledsPerFrame * 3;
+
+            statTotalLeds.textContent = ledsPerFrame.toLocaleString();
+
+            if (!rawBuffer) {
+                placeholder.style.display = 'block';
+                canvas.style.display = 'none';
+                return;
+            }
+
+            activeOffset = parseInt(headerOffsetSelect.value) || 0;
+            const availableBytes = Math.max(0, rawBuffer.length - activeOffset);
+            totalFrames = Math.floor(availableBytes / frameSizeBytes);
+            
+            if (totalFrames <= 0) {
+                alertBox.style.display = "block";
+                alertBox.textContent = `File size (${rawBuffer.length} B) too small for ${width}x${height} matrix with ${activeOffset}B header.`;
+                placeholder.style.display = 'block';
+                canvas.style.display = 'none';
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            canvas.style.display = 'block';
+
+            currentFrame = 0;
+            timelineScrubber.max = totalFrames - 1;
+            timelineScrubber.value = 0;
+
+            updateCanvasDimensions();
+            updateStats();
+            renderCurrentFrame();
+        }
+
+        const matrixRotationSelect = document.getElementById('matrixRotation');
+        const rotationValDisplay = document.getElementById('rotationVal');
+        const rotateBtn = document.getElementById('rotateBtn');
+
+        matrixRotationSelect.addEventListener('change', () => {
+            rotationValDisplay.textContent = `${matrixRotationSelect.value}°`;
+            updateCanvasDimensions();
+            renderCurrentFrame();
+        });
+
+        rotateBtn.addEventListener('click', () => {
+            let rot = (parseInt(matrixRotationSelect.value) + 90) % 360;
+            matrixRotationSelect.value = rot.toString();
+            rotationValDisplay.textContent = `${rot}°`;
+            updateCanvasDimensions();
+            renderCurrentFrame();
+        });
+
+        function updateCanvasDimensions() {
+            const rawW = parseInt(matrixWidthInput.value) || 25;
+            const rawH = parseInt(matrixHeightInput.value) || 20;
+            const rot = parseInt(matrixRotationSelect.value) || 0;
+            const pSize = parseInt(pixelSizeInput.value) || 16;
+            const gap = Math.max(1, Math.floor(pSize * 0.15));
+
+            // Swap canvas dimensions if rotated 90 or 270 degrees
+            const displayW = (rot === 90 || rot === 270) ? rawH : rawW;
+            const displayH = (rot === 90 || rot === 270) ? rawW : rawH;
+
+            canvas.width = displayW * (pSize + gap) + gap;
+            canvas.height = displayH * (pSize + gap) + gap;
+        }
+
+        function renderCurrentFrame() {
+            if (!rawBuffer || totalFrames === 0) return;
+
+            const width = parseInt(matrixWidthInput.value) || 25;
+            const height = parseInt(matrixHeightInput.value) || 20;
+            const rot = parseInt(matrixRotationSelect.value) || 0;
+            const layout = matrixLayoutSelect.value;
+            const corner = startCornerSelect.value;
+            const cOrder = colorOrderSelect.value;
+            const pSize = parseInt(pixelSizeInput.value) || 16;
+            const gap = Math.max(1, Math.floor(pSize * 0.15));
+            const ledsPerFrame = width * height;
+            const frameSizeBytes = ledsPerFrame * 3;
+
+            const frameOffset = activeOffset + (currentFrame * frameSizeBytes);
+            const frameData = rawBuffer.subarray(frameOffset, frameOffset + frameSizeBytes);
+
+            // Fill background
+            ctx.fillStyle = '#05070a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    let mapX = x;
+                    let mapY = y;
+
+                    // Handle corner flipping
+                    if (corner === 'top-right' || corner === 'bottom-right') {
+                        mapX = width - 1 - x;
+                    }
+                    if (corner === 'bottom-left' || corner === 'bottom-right') {
+                        mapY = height - 1 - y;
+                    }
+
+                    let ledIndex;
+                    if (layout === 'serpentine') {
+                        if (mapY % 2 === 1) {
+                            ledIndex = mapY * width + (width - 1 - mapX);
+                        } else {
+                            ledIndex = mapY * width + mapX;
+                        }
+                    } else {
+                        ledIndex = mapY * width + mapX;
+                    }
+
+                    const base = ledIndex * 3;
+                    let r = 0, g = 0, b = 0;
+
+                    if (base + 2 < frameData.length) {
+                        if (cOrder === 'GRB') {
+                            g = frameData[base];
+                            r = frameData[base + 1];
+                            b = frameData[base + 2];
+                        } else if (cOrder === 'BGR') {
+                            b = frameData[base];
+                            g = frameData[base + 1];
+                            r = frameData[base + 2];
+                        } else {
+                            r = frameData[base];
+                            g = frameData[base + 1];
+                            b = frameData[base + 2];
+                        }
+                    }
+
+                    // Rotate coordinates for drawing onto the canvas
+                    let drawX = x;
+                    let drawY = y;
+
+                    if (rot === 90) {
+                        drawX = height - 1 - y;
+                        drawY = x;
+                    } else if (rot === 180) {
+                        drawX = width - 1 - x;
+                        drawY = height - 1 - y;
+                    } else if (rot === 270) {
+                        drawX = y;
+                        drawY = width - 1 - x;
+                    }
+
+                    const px = gap + drawX * (pSize + gap);
+                    const py = gap + drawY * (pSize + gap);
+
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    ctx.beginPath();
+                    ctx.roundRect(px, py, pSize, pSize, Math.max(1, pSize * 0.2));
+                    ctx.fill();
+                }
+            }
+
+            timeDisplay.textContent = `${currentFrame + 1} / ${totalFrames}`;
+            timelineScrubber.value = currentFrame;
+        }
+
+        // Playback Controls
+        function startPlayback() {
+            if (!rawBuffer || totalFrames <= 0) return;
+            isPlaying = true;
+            playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect>';
+            
+            const interval = 1000 / targetFPS;
+            animationTimer = setInterval(() => {
+                currentFrame = (currentFrame + 1) % totalFrames;
+                renderCurrentFrame();
+            }, interval);
+        }
+
+        function stopPlayback() {
+            isPlaying = false;
+            playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"></polygon>';
+            if (animationTimer) {
+                clearInterval(animationTimer);
+                animationTimer = null;
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        });
+
+        timelineScrubber.addEventListener('input', (e) => {
+            currentFrame = parseInt(e.target.value);
+            renderCurrentFrame();
+        });
+
+        prevFrameBtn.addEventListener('click', () => {
+            stopPlayback();
+            currentFrame = (currentFrame - 1 + totalFrames) % totalFrames;
+            renderCurrentFrame();
+        });
+
+        nextFrameBtn.addEventListener('click', () => {
+            stopPlayback();
+            currentFrame = (currentFrame + 1) % totalFrames;
+            renderCurrentFrame();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            stopPlayback();
+            currentFrame = 0;
+            renderCurrentFrame();
+        });
+
+        // Demo Binary Pattern Generator
+        demoBtn.addEventListener('click', () => {
+            const width = parseInt(matrixWidthInput.value) || 25;
+            const height = parseInt(matrixHeightInput.value) || 20;
+            const numLeds = width * height;
+            const numFrames = 60;
+            const buffer = new Uint8Array(numFrames * numLeds * 3);
+
+            for (let f = 0; f < numFrames; f++) {
+                const hueOffset = (f / numFrames) * 360;
+                for (let i = 0; i < numLeds; i++) {
+                    const x = i % width;
+                    const y = Math.floor(i / width);
+                    
+                    const angle = Math.atan2(y - height/2, x - width/2) * (180 / Math.PI);
+                    const dist = Math.sqrt((x - width/2)**2 + (y - height/2)**2);
+                    const hue = (hueOffset + angle + dist * 10) % 360;
+
+                    // Simple HSV to RGB
+                    const xColor = 1 - Math.abs((hue / 60) % 2 - 1);
+                    let r = 0, g = 0, b = 0;
+                    if (hue < 60) { r = 1; g = xColor; }
+                    else if (hue < 120) { r = xColor; g = 1; }
+                    else if (hue < 180) { g = 1; b = xColor; }
+                    else if (hue < 240) { g = xColor; b = 1; }
+                    else if (hue < 300) { r = xColor; b = 1; }
+                    else { r = 1; b = xColor; }
+
+                    const frameOffset = f * numLeds * 3 + i * 3;
+                    buffer[frameOffset] = Math.round(r * 255);
+                    buffer[frameOffset + 1] = Math.round(g * 255);
+                    buffer[frameOffset + 2] = Math.round(b * 255);
+                }
+            }
+
+            rawBuffer = buffer;
+            headerOffsetSelect.value = "0";
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = `Demo Animated Rainbow Spiral (${(buffer.length / 1024).toFixed(1)} KB)`;
+            updateMatrixConfig();
+            startPlayback();
+        });
+
+        function updateStats() {
+            if (!rawBuffer) {
+                statTotalFrames.textContent = '0';
+                statDuration.textContent = '0.0s';
+                statFileSize.textContent = '0 KB';
+                return;
+            }
+            statTotalFrames.textContent = totalFrames.toLocaleString();
+            statDuration.textContent = `${(totalFrames / targetFPS).toFixed(1)}s`;
+            statFileSize.textContent = `${(rawBuffer.length / 1024 / 1024).toFixed(2)} MB`;
+        }
+    </script>
+</body>
+</html>

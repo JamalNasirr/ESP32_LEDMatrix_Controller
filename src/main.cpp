@@ -291,91 +291,24 @@ const char index_html[] PROGMEM = R"rawhtml(
             font-weight: bold;
             margin-right: 5px;
         }
-        .board-wrap { text-align: center; margin-bottom: 12px; }
-        .board {
-            display: inline-flex;
-            background: #111827;
-            border-radius: 14px;
-            padding: 10px 4px;
-            border: 2px solid rgba(255,255,255,0.08);
-            position: relative;
-        }
-        .pin-col { display: flex; flex-direction: column; gap: 1px; }
-        .board-mid {
-            width: 64px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .chip {
-            width: 42px; height: 42px;
-            background: #1f2937;
+        .pin-list {
+            margin-top: 10px;
+            font-size: 13px;
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
             border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8px; color: #6b7280; font-weight: 700;
-            letter-spacing: 1px;
-            border: 1px solid #374151;
+            padding: 8px 12px;
         }
-        .usb-lbl {
-            margin-top: 6px;
-            background: #1f2937;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 7px; color: #6b7280; font-weight: 600;
+        .pin-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .pr { display: flex; align-items: center; gap: 4px; height: 16px; padding: 0 3px; }
-        .pr.l { flex-direction: row-reverse; }
-        .pd {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #374151;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-            border: 1px solid #4b5563;
+        .pin-item:last-child {
+            border-bottom: none;
         }
-        .pn {
-            font-family: monospace;
-            font-size: 9px;
-            color: #6b7280;
-            white-space: nowrap;
-            min-width: 28px;
-            transition: color 0.3s ease;
-        }
-        .pr.l .pn { text-align: right; }
-        .pr.r .pn { text-align: left; }
-        .pr.act .pd {
-            background: #2cb67d;
-            border-color: #2cb67d;
-            animation: pp 2s ease-in-out infinite;
-        }
-        .pr.act .pn { color: #2cb67d; font-weight: 700; }
-        .pr.gnd .pd {
-            background: #f59e0b;
-            border-color: #f59e0b;
-            box-shadow: 0 0 5px rgba(245,158,11,0.4);
-        }
-        .pr.gnd .pn { color: #f59e0b; font-weight: 700; }
-        @keyframes pp {
-            0%,100% { box-shadow: 0 0 4px rgba(44,182,125,0.4); }
-            50% { box-shadow: 0 0 10px rgba(44,182,125,0.9); }
-        }
-        .board-legend {
-            display: flex; justify-content: center; gap: 14px;
-            margin-top: 10px; font-size: 11px; color: var(--text-muted);
-        }
-        .ldot {
-            display: inline-block; width: 8px; height: 8px;
-            border-radius: 50%; margin-right: 4px; vertical-align: middle;
-        }
-        .ldot.data { background: #2cb67d; box-shadow: 0 0 4px rgba(44,182,125,0.5); }
-        .ldot.gnd { background: #f59e0b; box-shadow: 0 0 4px rgba(245,158,11,0.4); }
-        .ldot.off { background: #374151; border: 1px solid #4b5563; }
-        .pwr-note {
-            text-align: center; font-size: 11px; color: var(--text-muted);
-            margin-top: 8px;
-        }
-        .pwr-note b { color: #f59e0b; }
     </style>
 </head>
 <body>
@@ -419,53 +352,22 @@ const char index_html[] PROGMEM = R"rawhtml(
 
         <div class="section">
             <div class="section-title">Smart Wiring Guide</div>
-            <div class="board-wrap">
-                <div class="board">
-                    <div class="pin-col">
-                        <div class="pr l"><span class="pn">3V3</span><span class="pd"></span></div>
-                        <div class="pr l"><span class="pn">EN</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="36"><span class="pn">D36</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="39"><span class="pn">D39</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="34"><span class="pn">D34</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="35"><span class="pn">D35</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="32"><span class="pn">D32</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="33"><span class="pn">D33</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="25"><span class="pn">D25</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="26"><span class="pn">D26</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="27"><span class="pn">D27</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="14"><span class="pn">D14</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="12"><span class="pn">D12</span><span class="pd"></span></div>
-                        <div class="pr l" data-gpio="13"><span class="pn">D13</span><span class="pd"></span></div>
-                        <div class="pr l" data-gnd><span class="pn">GND</span><span class="pd"></span></div>
-                    </div>
-                    <div class="board-mid">
-                        <div class="chip">ESP32</div>
-                        <div class="usb-lbl">USB</div>
-                    </div>
-                    <div class="pin-col">
-                        <div class="pr r"><span class="pd"></span><span class="pn">VIN</span></div>
-                        <div class="pr r" data-gnd><span class="pd"></span><span class="pn">GND</span></div>
-                        <div class="pr r" data-gpio="23"><span class="pd"></span><span class="pn">D23</span></div>
-                        <div class="pr r" data-gpio="22"><span class="pd"></span><span class="pn">D22</span></div>
-                        <div class="pr r"><span class="pd"></span><span class="pn">TX</span></div>
-                        <div class="pr r"><span class="pd"></span><span class="pn">RX</span></div>
-                        <div class="pr r" data-gpio="21"><span class="pd"></span><span class="pn">D21</span></div>
-                        <div class="pr r" data-gpio="19"><span class="pd"></span><span class="pn">D19</span></div>
-                        <div class="pr r" data-gpio="18"><span class="pd"></span><span class="pn">D18</span></div>
-                        <div class="pr r" data-gpio="5"><span class="pd"></span><span class="pn">D5</span></div>
-                        <div class="pr r" data-gpio="17"><span class="pd"></span><span class="pn">D17</span></div>
-                        <div class="pr r" data-gpio="16"><span class="pd"></span><span class="pn">D16</span></div>
-                        <div class="pr r" data-gpio="4"><span class="pd"></span><span class="pn">D4</span></div>
-                        <div class="pr r" data-gpio="2"><span class="pd"></span><span class="pn">D2</span></div>
-                        <div class="pr r" data-gpio="15"><span class="pd"></span><span class="pn">D15</span></div>
-                    </div>
+            <div class="guide-card" id="connection-guide">
+                <div class="guide-line">
+                    <span>Power Supply:</span>
+                    <span><span class="pin-label">External 5V</span> (Grounds Joined)</span>
                 </div>
-                <div class="board-legend">
-                    <span><span class="ldot data"></span>Data</span>
-                    <span><span class="ldot gnd"></span>Ground</span>
-                    <span><span class="ldot off"></span>Unused</span>
+                <div class="guide-line" id="serial-pin-line">
+                    <span>Data Connection:</span>
+                    <span>Connect chain to <span class="pin-label">GPIO 2</span></span>
                 </div>
-                <div class="pwr-note">⚡ Power: <b>External 5V</b> supply — join grounds with ESP32</div>
+            </div>
+            
+            <div id="parallel-pins-container" style="display:none; margin-bottom:15px;">
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Parallel Pin Allocation:</div>
+                <div class="pin-list" id="pin-allocation-list">
+                    <!-- Dynamic List -->
+                </div>
             </div>
 
             <!-- Dynamic Alerts -->
@@ -623,9 +525,10 @@ const char index_html[] PROGMEM = R"rawhtml(
         const valFps = document.getElementById('val-fps');
         const valPower = document.getElementById('val-power');
         
+        const serialPinLine = document.getElementById('serial-pin-line');
+        const parallelPinsContainer = document.getElementById('parallel-pins-container');
+        const pinAllocationList = document.getElementById('pin-allocation-list');
         const alertContainer = document.getElementById('alert-container');
-        const allPinRows = document.querySelectorAll('.pr[data-gpio]');
-        const gndPins = document.querySelectorAll('.pr[data-gnd]');
         
         const safePins = [2, 4, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27];
         
@@ -655,43 +558,48 @@ const char index_html[] PROGMEM = R"rawhtml(
             const watts = (totalLeds * 0.06 * 5).toFixed(0);
             valPower.textContent = `${maxAmps} A`;
             
-            // Clear all pin highlights
-            allPinRows.forEach(p => p.classList.remove('act'));
-            gndPins.forEach(p => p.classList.remove('gnd'));
+            serialPinLine.style.display = 'none';
+            parallelPinsContainer.style.display = 'none';
+            pinAllocationList.innerHTML = '';
             alertContainer.innerHTML = '';
             
             let alertsHTML = '';
-            let activePins = [];
             
-            if (strips <= 1) {
-                // Serial mode — single data pin
-                activePins = [2];
-            } else if (strips <= 16) {
-                // Parallel mode — one pin per strip
-                activePins = safePins.slice(0, strips);
-                const parallelFrameTimeMs = (leds * 0.03) + 0.3;
-                const hwFps = Math.round(1000 / parallelFrameTimeMs);
-                const fps = Math.min(30, hwFps);
-                valFps.textContent = hwFps >= 30 ? '30 FPS' : fps + ' FPS (HW limited)';
+            if (totalLeds <= 600) {
+                serialPinLine.style.display = 'flex';
+                serialPinLine.innerHTML = `<span>Data Connection:</span><span>Connect chain to <span class="pin-label">GPIO 2</span></span>`;
             } else {
-                // Chained parallel — multiple strips per pin
-                activePins = safePins.slice(0, 16);
-                const stripsPerPin = Math.ceil(strips / 16);
-                const longestPinLeds = stripsPerPin * leds;
-                const parallelFrameTimeMs = (longestPinLeds * 0.03) + 0.3;
-                const hwFps = Math.round(1000 / parallelFrameTimeMs);
-                const fps = Math.min(30, hwFps);
-                valFps.textContent = hwFps >= 30 ? '30 FPS' : fps + ' FPS (HW limited)';
+                parallelPinsContainer.style.display = 'block';
+                
+                if (strips <= 16) {
+                    for (let i = 0; i < strips; i++) {
+                        pinAllocationList.innerHTML += `<div class="pin-item"><span>Strip ${i + 1} DIN</span><span><span class="pin-label">GPIO ${safePins[i]}</span></span></div>`;
+                    }
+                    const parallelFrameTimeMs = (leds * 0.03) + 0.3;
+                    const parallelFps = Math.min(100, Math.round(1000 / parallelFrameTimeMs));
+                    valFps.textContent = parallelFps + " FPS";
+                } else {
+                    const stripsPerPin = Math.ceil(strips / 16);
+                    const longestPinLeds = stripsPerPin * leds;
+                    
+                    pinAllocationList.innerHTML += `<div class="pin-item" style="font-weight: 600; color: var(--accent-hover); padding-bottom: 6px;"><span>Grouping: ${stripsPerPin} strips chained per pin</span></div>`;
+                    
+                    let stripCounter = 1;
+                    for (let i = 0; i < 16; i++) {
+                        const startStrip = stripCounter;
+                        const endStrip = Math.min(strips, stripCounter + stripsPerPin - 1);
+                        if (startStrip <= strips) {
+                            const rangeLabel = startStrip === endStrip ? `Strip ${startStrip}` : `Strips ${startStrip}-${endStrip}`;
+                            pinAllocationList.innerHTML += `<div class="pin-item"><span>${rangeLabel} DIN</span><span><span class="pin-label">GPIO ${safePins[i]}</span></span></div>`;
+                        }
+                        stripCounter += stripsPerPin;
+                    }
+                    
+                    const parallelFrameTimeMs = (longestPinLeds * 0.03) + 0.3;
+                    const parallelFps = Math.min(100, Math.round(1000 / parallelFrameTimeMs));
+                    valFps.textContent = parallelFps + " FPS";
+                }
             }
-            
-            // Highlight active data pins on the board
-            activePins.forEach(gpio => {
-                const el = document.querySelector(`.pr[data-gpio="${gpio}"]`);
-                if (el) el.classList.add('act');
-            });
-            
-            // Highlight GND pins
-            gndPins.forEach(p => p.classList.add('gnd'));
             
             if (totalLeds > 15000) {
                 alertsHTML += `<div class="alert-box alert-danger"><span class="alert-icon">❌ OOM CRASH RISK:</span> At ${totalLeds.toLocaleString()} pixels, FastLED consumes ~${Math.round(totalLeds * 3 / 1024)}KB of RAM. Standard ESP32 WILL crash. You MUST use an <strong>ESP32-WROVER</strong> with PSRAM enabled.</div>`;
